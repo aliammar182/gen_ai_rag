@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+        .sidebar {
+            width: 300px;
+            min-height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 60px; /* Adjust this value to move the header down */
+        }
+        .logo-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+    height: 60px;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: white; /* Optional: for better visibility of the logo */
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures the logo scales to fit within the container */
+}
+        .chats {
+            flex-grow: 1;
+            margin-top: 20px; /* Adjust to leave space for the logo */
+            margin-bottom: 10px;
+            overflow-y: auto;
+            max-height: calc(100% - 200px);
+        }
+        .new-chat {
+            background-color: #3498db;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 27px;
+            right: 20px;
+        }
+        .settings {
+            margin-top: auto;
+            background-color: #e74c3c;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .dropdown {
+            margin-bottom: 10px;
+        }
+        .dropdown select {
+            appearance: none;
+            background-color: #34495e;
+            border: none;
+            padding: 10px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 16px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px 16px;
+        }
+        .dropdown select:focus {
+            outline: none;
+            border: 1px solid #3498db;
+        }
+        .dropdown button {
+            background-color: #3498db;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+        }
+        .chat-window {
+            width: calc(100% - 300px);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .message.user {
+            justify-content: flex-start;
+        }
+        .message.bot {
+            justify-content: flex-end;
+            position: relative;
+        }
+        .message-content {
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 60%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .message.user .message-content {
+            background-color: #3498db;
+            color: white;
+            border-bottom-left-radius: 0;
+        }
+        .message.bot .message-content {
+            background-color: #77af78;
+            color: white;
+            border-bottom-right-radius: 0;
+            position: relative;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+        }
+        .input-box textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            resize: none;
+        }
+        .input-box button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+        .loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 10px;
+            color: white;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .chat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .chat-item:hover {
+            background-color: #34495e;
+        }
+        .chat-item .chat-info {
+            flex-grow: 1;
+        }
+        .chat-item .delete-chat {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .knowledge-base-options {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .knowledge-base-options button {
+            background-color: #3498db;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        .close-btn {
+            background-color: #e74c3c;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        /* Settings iframe styles */
+        .settings-iframe {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .settings-iframe iframe {
+            width: 50%;
+            height: 70%;
+            border: none;
+            border-radius: 10px;
+        }
+        .settings-iframe .close-settings {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* Bouncing dots animation */
+        .bouncing-dots {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .bouncing-dots div {
+            width: 8px;
+            height: 8px;
+            margin: 3px;
+            border-radius: 50%;
+            background-color: #18c31e; /* Green color for bot */
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        .bouncing-dots div:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .bouncing-dots div:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes expandBackground {
+            0% { background-color: #fff; width: 24px; height: 24px; }
+            50% { background-color: #fff; width: auto; padding: 0 10px; }
+            100% { background-color: #fff; width: 24px; height: 24px; }
+        }
+
+        .copy-button {
+            position: absolute;
+            top: -25px;
+            right: 5px;
+            background-color: #fff;
+            color: #3498db;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Company Logo" class="logo">
+        </div>
+        <div class="sidebar-header">
+            <h2>Chats</h2>
+            <button class="new-chat" onclick="startNewChat()">+</button>
+        </div>
+        <div class="dropdown">
+            <label for="folder-select">Select Folder:</label>
+            <select id="folder-select">
+                <!-- Options will be populated dynamically -->
+            </select>
+            <button onclick="processFolder()">Process</button>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div>Loading...</div>
+            </div>
+            <div id="processing-completed" class="loading">
+                Processing completed!
+            </div>
+        </div>
+        <div class="chats">
+            <h2>Previous Chats</h2>
+            <ul id="chat-list"></ul>
+        </div>
+        <button class="settings" onclick="openSettings()">Settings</button>
+    </div>
+    <div class="chat-window">
+        <div class="messages" id="messages"></div>
+        <div class="input-box">
+            <textarea id="message-input" placeholder="Type a message"></textarea>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div id="knowledge-base-options" class="knowledge-base-options">
+            <p>Index already exists. Do you want to update the knowledge base or switch to the existing one?</p>
+            <button onclick="updateKnowledgeBase()">Update Knowledge Base</button>
+            <button onclick="switchKnowledgeBase()">Switch to Existing Knowledge Base</button>
+            <button class="close-btn" onclick="closeKnowledgeBaseOptions()">Close</button>
+        </div>
+    </div>
+    <div class="settings-iframe" id="settings-iframe">
+        <button class="close-settings" onclick="closeSettings()">×</button>
+        <iframe id="settings-frame" src="/settings"></iframe>
+    </div>
+    <div id="message-box" class="message-box">Settings saved successfully!</div>
+    <script>
+        let currentChatId = null;
+        let chats = [];
+        let selectedFolder = null;
+
+        function fetchS3Folders() {
+            fetch('/get_s3_folders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        populateFolderDropdown(data.folders);
+                    } else {
+                        console.error('Error fetching S3 folders:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching S3 folders:', error);
+                });
+        }
+
+        function populateFolderDropdown(folders) {
+            const folderSelect = document.getElementById('folder-select');
+            folderSelect.innerHTML = '';
+            folders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder;
+                option.textContent = folder;
+                folderSelect.appendChild(option);
+            });
+        }
+
+        function saveChats() {
+            console.log('Saving chats:', JSON.stringify(chats));
+            localStorage.setItem('chats', JSON.stringify(chats));
+        }
+
+        function startNewChat() {
+            const chatId = Date.now().toString();
+            const chat = { id: chatId, messages: [] };
+            chats.push(chat);
+            currentChatId = chatId;
+            console.log(`Started new chat with ID: ${chatId}`);
+            document.getElementById('messages').innerHTML = '';
+            addChatToList(chat);
+        }
+
+        function addChatToList(chat) {
+            const chatList = document.getElementById('chat-list');
+            const listItem = document.createElement('li');
+            listItem.className = 'chat-item';
+            listItem.setAttribute('data-chat-id', chat.id);
+
+            const chatInfo = document.createElement('span');
+            chatInfo.className = 'chat-info';
+            chatInfo.textContent = `Chat ${chat.id}`;
+            chatInfo.onclick = () => loadChat(chat.id);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-chat';
+            deleteButton.innerHTML = '&#128465;'; // Unicode for bucket symbol
+            deleteButton.onclick = (e) => {
+                e.stopPropagation();
+                deleteChat(chat.id);
+            };
+
+            listItem.appendChild(chatInfo);
+            listItem.appendChild(deleteButton);
+            chatList.appendChild(listItem);
+            console.log(`Added chat with ID: ${chat.id} to the list`);
+        }
+
+        function updateChatName(chatId, message) {
+            const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"] .chat-info`);
+            if (chatItem) {
+                chatItem.textContent = message.substring(0, 20) + (message.length > 20 ? '...' : '');
+            }
+        }
+
+        function loadChat(chatId) {
+            const chat = chats.find(c => c.id === chatId);
+            if (!chat) {
+                console.error(`Chat with ID: ${chatId} not found`);
+                return;
+            }
+            currentChatId = chatId;
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = '';
+            chat.messages.forEach(msg => {
+                if (msg.user) addMessageToContainer(msg.user, 'user');
+                if (msg.bot) addMessageToContainer(msg.bot, 'bot');
+                saveMessageToMemory(msg.user, msg.bot);
+            });
+            console.log(`Loaded chat with ID: ${chatId}`);
+        }
+
+        function deleteChat(chatId) {
+            if (chats.length === 1) {
+                alert("Cannot delete the first chat unless there is another chat.");
+                return;
+            }
+            chats = chats.filter(c => c.id !== chatId);
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = '';
+            chats.forEach(addChatToList);
+            document.getElementById('messages').innerHTML = '';
+            console.log(`Deleted chat with ID: ${chatId}`);
+        }
+
+        function addMessageToContainer(message, type) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message;
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            console.log(`Added ${type} message: ${message}`);
+        }
+
+        function showBouncingDots(container) {
+            const bouncingDots = document.createElement('div');
+            bouncingDots.className = 'bouncing-dots';
+            bouncingDots.innerHTML = `
+                <div></div>
+                <div></div>
+                <div></div>
+            `;
+            container.appendChild(bouncingDots);
+        }
+
+        function hideBouncingDots(container) {
+            const bouncingDots = container.querySelector('.bouncing-dots');
+            if (bouncingDots) {
+                container.removeChild(bouncingDots);
+            }
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.querySelector('.input-box button');
+
+            // Disable input elements
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            const message = messageInput.value.trim();
+            if (!message) {
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                return;
+            }
+
+            if (!currentChatId) {
+                console.error("No active chat. Please start a new chat.");
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                return;
+            }
+
+            addMessageToContainer(message, 'user');
+
+            const chat = chats.find(c => c.id === currentChatId);
+            if (chat) {
+                if (chat.messages.length === 0) {
+                    updateChatName(currentChatId, message);
+                }
+                chat.messages.push({ user: message, bot: "" });
+            } else {
+                console.error(`Chat with ID: ${currentChatId} not found when sending message`);
+            }
+
+            // Create container for bot response and show bouncing dots
+            const messagesContainer = document.getElementById('messages');
+            const botResponseContainer = document.createElement('div');
+            botResponseContainer.className = 'message bot';
+            messagesContainer.appendChild(botResponseContainer);
+            showBouncingDots(botResponseContainer);
+
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: currentChatId,
+                    message: message,
+                    folder: document.getElementById('folder-select').value
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                streamBotResponse(data, botResponseContainer);
+                hideBouncingDots(botResponseContainer);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                hideBouncingDots(botResponseContainer);
+                addMessageToContainer(error.message, 'bot');
+            });
+
+            messageInput.value = '';
+        }
+
+        function streamBotResponse(data, container) {
+            const chat = chats.find(c => c.id === currentChatId);
+
+            const botMessageContent = document.createElement('div');
+            botMessageContent.classList.add('message-content', 'bot');
+            container.appendChild(botMessageContent);
+
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-button';
+            copyButton.innerHTML = '⧉';
+            copyButton.onclick = () => copyToClipboard(copyButton, botMessageContent.textContent);
+            container.appendChild(copyButton);
+
+            const botResponseWords = data.bot.split(/(\s+|\n+)/);
+
+            function appendWordOrNewline(word) {
+                if (word === '\n') {
+                    botMessageContent.appendChild(document.createElement('br'));
+                } else {
+                    const span = document.createElement('span');
+                    span.textContent = word;
+                    botMessageContent.appendChild(span);
+                }
+                container.scrollTop = container.scrollHeight;
+            }
+
+            const appendPromises = botResponseWords.map((word, index) => {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        appendWordOrNewline(word);
+                        resolve();
+                    }, 100 * index);
+                });
+            });
+
+            Promise.all(appendPromises).then(() => {
+                const messageInput = document.getElementById('message-input');
+                const sendButton = document.querySelector('.input-box button');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                chat.messages[chat.messages.length - 1].bot = data.bot;
+                console.log(`Received bot response: ${data.bot}`);
+            });
+        }
+
+        function copyToClipboard(button, text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            button.innerHTML = 'Copied!';
+            button.style.backgroundColor = '#fff';
+            button.style.width = 'auto';
+            button.style.padding = '0 10px';
+
+            setTimeout(() => {
+                button.innerHTML = '⧉';
+                button.style.backgroundColor = '';
+                button.style.width = '24px';
+                button.style.padding = '';
+            }, 2000);
+        }
+
+        function processFolder() {
+            const folderSelect = document.getElementById('folder-select');
+            const folder = folderSelect.value;
+            selectedFolder = folder;
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('processing-completed').style.display = 'none';
+
+            fetch('/process_folder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ folder: folder })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.status === 'existing') {
+                    document.getElementById('knowledge-base-options').style.display = 'flex';
+                } else {
+                    document.getElementById('processing-completed').style.display = 'flex';
+                    setTimeout(() => {
+                        document.getElementById('processing-completed').style.display = 'none';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error("Error processing folder:", error);
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        function handleExistingIndex() {
+            document.getElementById('knowledge-base-options').style.display = 'flex';
+        }
+
+        function updateKnowledgeBase() {
+            document.getElementById('knowledge-base-options').style.display = 'none';  // Close the menu instantly
+            startLoading();
+            fetch('/update_knowledge_base', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ folder: selectedFolder })
+            })
+            .then(response => response.json())
+            .then(data => {
+                stopLoading();
+            })
+            .catch(error => {
+                console.error("Error updating knowledge base:", error);
+                stopLoading();
+            });
+        }
+
+        function switchKnowledgeBase() {
+            document.getElementById('knowledge-base-options').style.display = 'none';  // Close the menu instantly
+            startLoading();
+            fetch('/switch_knowledge_base', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ folder: selectedFolder })
+            })
+            .then(response => response.json())
+            .then(data => {
+                stopLoading();
+            })
+            .catch(error => {
+                console.error("Error switching knowledge base:", error);
+                stopLoading();
+            });
+        }
+
+        function startLoading() {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('processing-completed').style.display = 'none';
+        }
+
+        function stopLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('processing-completed').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('processing-completed').style.display = 'none';
+            }, 3000);
+        }
+
+        function closeKnowledgeBaseOptions() {
+            document.getElementById('knowledge-base-options').style.display = 'none';
+        }
+
+        document.getElementById('message-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            chats = [];
+            currentChatId = null;
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = '';
+            console.log('Initialized new session');
+            startNewChat(); // Start a new chat automatically when the session starts
+            fetchS3Folders(); // Fetch folders from S3 on page load
+        });
+
+        function saveMessageToMemory(input, output) {
+            fetch('/save_memory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ input: input, output: output })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Saved message to memory: ${input} -> ${output}`);
+            })
+            .catch(error => {
+                console.error("Error saving message to memory:", error);
+            });
+        }
+
+        function openSettings() {
+            document.getElementById('settings-iframe').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-iframe').style.display = 'none';
+        }
+
+        window.addEventListener('message', (event) => {
+            if (event.data === 'settingsSaved') {
+                showMessage('Settings saved successfully!');
+                closeSettings();
+            }
+        });
+
+        function showMessage(message) {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

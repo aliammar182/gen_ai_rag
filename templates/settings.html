@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .settings-form label {
+            margin: 10px 0 5px;
+        }
+        .settings-form select, .settings-form input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .settings-form button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #e74c3c;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Settings</h2>
+    <form class="settings-form" id="settings-form">
+        <label for="model-select">Select Model</label>
+        <select id="model-select" name="model">
+            <option value="mistral-7b">Mistral 7B</option>
+            <option value="openai">OpenAI</option>
+        </select>
+
+        <div id="openai-options" style="display: none;">
+            <label for="openai-model">OpenAI Model</label>
+            <select id="openai-model" name="openai_model">
+                {% for model_id in model_ids %}
+                    <option value="{{ model_id }}">{{ model_id }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <label for="max-tokens">Max Tokens</label>
+        <input type="number" id="max-tokens" name="max_tokens" value="200">
+
+        <label for="temperature">Temperature</label>
+        <input type="number" id="temperature" name="temperature" value="0.6" step="0.1" min="0" max="1">
+
+        <label for="passed-prompt">Passed Prompt</label>
+        <input type="text" id="passed-prompt" name="passed_prompt">
+
+        <button type="button" onclick="saveSettings()">Save Settings</button>
+    </form>
+
+    <script>
+        document.getElementById('model-select').addEventListener('change', function() {
+            const openaiOptions = document.getElementById('openai-options');
+            if (this.value === 'openai') {
+                openaiOptions.style.display = 'block';
+            } else {
+                openaiOptions.style.display = 'none';
+            }
+        });
+
+        function saveSettings() {
+            const form = document.getElementById('settings-form');
+            const formData = new FormData(form);
+            const settings = {};
+            formData.forEach((value, key) => {
+                settings[key] = value;
+            });
+
+            fetch('/save_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(settings)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Settings saved:', data);
+                window.parent.postMessage('settingsSaved', '*');
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+            });
+        }
+    </script>
+</body>
+</html>
