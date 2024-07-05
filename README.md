@@ -103,7 +103,7 @@ This repository contains a Flask application that can be deployed on AWS ECS Far
 1. **Update the ECS Service**:
    Force a new deployment of the ECS service to use the updated task definition.
    ```sh
-   aws ecs update-service      --cluster flask-cluster      --service flask-service      --task-definition flask-task      --force-new-deployment
+   aws ecs update-service      --cluster flask-cluster      --service genai-app      --task-definition flask-task      --force-new-deployment
    ```
 
 ### 4. Verify the Deployment
