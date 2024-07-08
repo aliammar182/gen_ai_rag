@@ -11,6 +11,33 @@ This repository contains a Flask application that can be deployed on AWS ECS Far
 - Existing ECS Cluster and Task Definition
 - Amazon ECR repository for your Docker images
 
+## Steps to Clone the Repository
+
+1. **Clone the Repository**:
+   Clone the repository to your local machine.
+   ```sh
+   git clone https://github.com/aliammar182/gen_ai_rag.git
+   cd gen_ai_rag
+   ```
+
+2. **Uncomment and Configure AWS Profile in `app.py`**:
+   Open `app.py` and uncomment the following lines. Replace `everbanega` with your AWS profile name that has permissions to Bedrock foundation models and S3 bucket.
+   ```python
+   aws_profile = 'everbanega'
+   boto3.setup_default_session(profile_name=aws_profile)
+   ```
+
+## Configuring AWS User on Visual Studio Code
+
+1. **Install AWS Toolkit for Visual Studio Code**:
+   Install the AWS Toolkit extension from the Visual Studio Code marketplace.
+
+2. **Configure AWS Credentials**:
+   Open the command palette in Visual Studio Code (`Ctrl+Shift+P` or `Cmd+Shift+P` on macOS), type `AWS: Create Credentials Profile` and follow the prompts to create a profile with your AWS access key and secret key.
+
+3. **Set AWS Profile**:
+   In Visual Studio Code, open the command palette, type `AWS: Connect to AWS` and select the profile you just created.
+
 ## Steps to Redeploy the Application
 
 ### 1. Build and Push the Updated Docker Image to Amazon ECR
